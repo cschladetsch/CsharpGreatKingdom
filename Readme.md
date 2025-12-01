@@ -12,7 +12,10 @@
 
 ### Prerequisites
 * **.NET 8.0 SDK**
-* **WSL2 / Linux Users:** You must install the underlying graphics libraries.
+* **TorchSharp**: Neural network library (automatically installed via NuGet)
+* **TorchSharp-cpu**: CPU-based PyTorch backend (automatically installed via NuGet)
+* **Raylib-cs**: Hardware-accelerated graphics library (automatically installed via NuGet)
+* **WSL2 / Linux Users:** You must install the underlying graphics and PyTorch dependencies.
 
 ### Install System Dependencies (WSL2 / Ubuntu)
 *If you are on Windows (native), skip this step.*
@@ -20,9 +23,13 @@
 ```bash
 sudo apt-get update
 sudo apt-get install -y dotnet-sdk-8.0
-# Raylib requires these for windowing/input:
+
+# Raylib dependencies (windowing/input):
 sudo apt-get install -y libasound2-dev libx11-dev libxrandr-dev libxi-dev \
 libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev libwayland-dev libxkbcommon-dev
+
+# TorchSharp/LibTorch dependencies:
+sudo apt-get install -y libgomp1
 ```
 
 ### Build the Game
@@ -63,6 +70,190 @@ If both players **Pass** consecutively, the game ends. Players count the empty i
 * **Handicap:** Because Blue goes first, **Blue must win by 3 points**.
     * If `Blue Score >= Orange Score + 3`: **Blue Wins**.
     * Otherwise: **Orange Wins**.
+
+---
+
+## Neural Network AI System
+
+Great Kingdom includes a Deep Q-Network (DQN) AI implementation using **TorchSharp**, capable of learning to play through self-training against the MCTS opponent.
+
+### Architecture
+
+The neural network is a fully-connected feedforward network:
+
+```
+Input Layer:  81 nodes (9x9 board state)
+Hidden Layer: 256 nodes (ReLU activation)
+Hidden Layer: 256 nodes (ReLU activation)
+Output Layer: 81 nodes (Q-values for each board position)
+```
+
+**Input Encoding:**
+* `1.0` = Your stones
+* `-1.0` = Opponent stones
+* `0.1` = Neutral castle
+* `0.0` = Empty space
+
+**Training Algorithm:**
+* **Deep Q-Learning (DQN)** with experience replay and target network
+* **Opponent**: MCTS (Monte Carlo Tree Search) with configurable iterations
+* **Reward Shaping**: Captures (+0.3/stone), losses (-0.5/stone), win (+1.0), loss (-1.0)
+
+### Brain Storage
+
+Trained neural networks ("brains") are stored in the `brains/` directory at the project root.
+
+**Filename Format:**
+```
+brain_L{loss}_G{games}_{timestamp}.bin
+```
+
+**Example:**
+```
+brain_L005843_G12345_20251202_143000.bin
+  |      |      |         |
+  |      |      |         └─ Timestamp (YYYYMMDD_HHMMSS)
+  |      |      └─────────── Games played (12,345)
+  |      └────────────────── Loss value * 1,000,000 (0.005843)
+  └───────────────────────── Identifier prefix
+```
+
+**Special Files:**
+* `latest.bin` - Alias pointing to the most recently saved brain
+
+**Automatic Management:**
+* System keeps the 5 best brains (lowest loss)
+* Older/worse brains are automatically deleted
+* Auto-save triggers when loss drops below `0.005`
+
+### Training the Neural Net
+
+1. **Launch Training Mode:** From the main menu, select "Train Neural Net"
+2. **Training Loop:** The AI plays against MCTS continuously, learning from each game
+3. **Monitor Progress:**
+   * **Games Played**: Number of training episodes completed
+   * **Current Loss**: Lower is better (target: < 0.005)
+4. **Save Options:**
+   * **Auto-Save**: Automatically saves when loss < 0.005
+   * **Manual Save**: Press the "Save Brain" button
+   * **Load Brain**: Select from previously saved brains
+
+### Configuration
+
+AI hyperparameters are defined in `ConfigData.cs`:
+
+```csharp
+// Learning
+LearningRate: 0.000005    // How fast the network learns
+Gamma: 0.85               // Discount factor for future rewards
+BatchSize: 128            // Training batch size
+
+// Exploration
+EpsilonStart: 1.0         // Initial exploration rate (100%)
+EpsilonMin: 0.05          // Minimum exploration rate (5%)
+EpsilonDecay: 0.9995      // Exploration decay per game
+
+// Memory
+Capacity: 5000            // Experience replay buffer size
+TargetUpdateFrequency: 500 // Update target network every N training steps
+```
+
+### Playing Against the Neural Net
+
+1. From the main menu, select "VS Neural Net"
+2. You play as **Blue**, the AI plays as **Orange**
+3. The AI uses the most recently saved brain (`latest.bin`)
+4. Training mode is disabled during gameplay for optimal performance
+
+---
+
+## Configuration File
+
+The game uses `config.json` for runtime configuration. This file is located at the project root and is automatically loaded on startup.
+
+### Location
+```
+CsharpGreatKingdom/
+  config.json          # Main configuration file
+  GreatKingdom/
+    config.json        # Copy for development
+```
+
+### Full Configuration Structure
+
+```json
+{
+  "Game": {
+    "GridSize": 9,
+    "MCTSIterations": 1000,
+    "DefaultIP": "127.0.0.1",
+    "Port": 7777
+  },
+  "AI": {
+    "Hyperparameters": {
+      "LearningRate": 0.0005,
+      "Gamma": 0.95,
+      "BatchSize": 128
+    },
+    "Exploration": {
+      "EpsilonStart": 1.0,
+      "EpsilonMin": 0.05,
+      "EpsilonDecay": 0.9995
+    },
+    "Memory": {
+      "Capacity": 10000,
+      "TargetUpdateFrequency": 500
+    }
+  }
+}
+```
+
+### Settings Explained
+
+**Game Settings:**
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `GridSize` | 9 | Board dimensions (9x9 grid) |
+| `MCTSIterations` | 1000 | Number of MCTS simulations for AI opponent (higher = stronger but slower) |
+| `DefaultIP` | "127.0.0.1" | Default IP address for network games |
+| `Port` | 7777 | Network port for multiplayer games |
+
+**AI Hyperparameters:**
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `LearningRate` | 0.0005 | Neural network learning rate (lower = slower but more stable) |
+| `Gamma` | 0.95 | Discount factor for future rewards (0.0-1.0, higher = more long-term thinking) |
+| `BatchSize` | 128 | Number of experiences sampled per training iteration |
+
+**AI Exploration:**
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `EpsilonStart` | 1.0 | Initial exploration rate (1.0 = 100% random moves at start) |
+| `EpsilonMin` | 0.05 | Minimum exploration rate (always explore 5% to avoid local optima) |
+| `EpsilonDecay` | 0.9995 | Exploration decay multiplier per game (closer to 1.0 = slower decay) |
+
+**AI Memory:**
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `Capacity` | 10000 | Experience replay buffer size (more = better diversity, more RAM) |
+| `TargetUpdateFrequency` | 500 | Update target network every N training steps (stabilizes learning) |
+
+### Tuning Tips
+
+**For Faster Training:**
+* Increase `LearningRate` to 0.001-0.005
+* Decrease `MCTSIterations` to 500-800
+* Increase `EpsilonDecay` to 0.999
+
+**For Better Final Performance:**
+* Decrease `LearningRate` to 0.0001-0.0003
+* Increase `MCTSIterations` to 1500-3000
+* Increase `Capacity` to 20000-50000
+
+**If Training is Unstable:**
+* Decrease `LearningRate`
+* Increase `Gamma` (0.95-0.99)
+* Decrease `EpsilonDecay` (slower exploration reduction)
 
 ---
 
