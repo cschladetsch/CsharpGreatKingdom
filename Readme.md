@@ -8,28 +8,13 @@
 
 ---
 
-## 1. Project Structure
-
-To build successfully, ensure your folder structure is exactly as follows:
-
-```text
-ProjectRoot/
-├── GreatKingdom.sln          # Solution File
-├── README.md                 # This file
-└── GreatKingdom/             # Source Code Folder
-    ├── GreatKingdom.csproj   # Project Settings (References Raylib-cs)
-    └── Program.cs            # Main Game Logic (See "Source Code" section below)
-```
-
----
-
-## 2. Build & Run Instructions
+## Build & Run Instructions
 
 ### Prerequisites
 * **.NET 8.0 SDK**
 * **WSL2 / Linux Users:** You must install the underlying graphics libraries.
 
-### Step 1: Install System Dependencies (WSL2 / Ubuntu)
+### Install System Dependencies (WSL2 / Ubuntu)
 *If you are on Windows (native), skip this step.*
 
 ```bash
@@ -40,7 +25,7 @@ sudo apt-get install -y libasound2-dev libx11-dev libxrandr-dev libxi-dev \
 libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev libwayland-dev libxkbcommon-dev
 ```
 
-### Step 2: Build the Game
+### Build the Game
 Open your terminal in the **ProjectRoot** folder.
 
 ```bash
@@ -58,7 +43,7 @@ dotnet run --project GreatKingdom
 
 Great Kingdom combines the territory mechanics of *Go* with a "Sudden Death" rule.
 
-See also (Rules.md)[Rules].
+See also [Rules](Rules.md).
 
 ### Core Mechanics
 1.  **Objective:** Win via **Capture** (Sudden Death) or **Territory Scoring**.
