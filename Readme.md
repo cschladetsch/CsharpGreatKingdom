@@ -88,7 +88,7 @@ The State Machine handles the "Instant Win" checks immediately after placement.
 
 ```mermaid
 graph TD
-    Start((Start)) --> Init[Init Board<br/>Place Neutral Center]
+    Start((Start)) --> Init["Init Board<br/>Place Neutral Center"]
     Init --> Input{Player Input}
     
     Input -- Spacebar --> Pass[Pass Turn]
@@ -97,14 +97,14 @@ graph TD
     Valid -- No --> Input
     Valid -- Yes --> Place[Place Stone]
     
-    Place --> Capture{Enemy<br/>Captured?}
-    Capture -- YES --> WinA[INSTANT WIN<br/>(Sudden Death)]
+    Place --> Capture{"Enemy<br/>Captured?"}
+    Capture -- YES --> WinA["INSTANT WIN<br/>(Sudden Death)"]
     
-    Capture -- NO --> Suicide{Self<br/>Captured?}
-    Suicide -- YES --> WinB[OPPONENT WINS<br/>(Suicide Rule)]
+    Capture -- NO --> Suicide{"Self<br/>Captured?"}
+    Suicide -- YES --> WinB["OPPONENT WINS<br/>(Suicide Rule)"]
     Suicide -- NO --> Switch[Switch Turn]
     
-    Pass --> DoublePass{2nd Consecutive<br/>Pass?}
+    Pass --> DoublePass{"2nd Consecutive<br/>Pass?"}
     DoublePass -- YES --> Score[Calculate Territory]
     DoublePass -- NO --> Switch
     
