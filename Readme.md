@@ -54,7 +54,7 @@ dotnet run --project GreatKingdom
 
 ---
 
-## 3. Game Rules
+## Game Rules
 
 Great Kingdom combines the territory mechanics of *Go* with a "Sudden Death" rule.
 
@@ -81,7 +81,7 @@ If both players **Pass** consecutively, the game ends. Players count the empty i
 
 ---
 
-## 4. Logic & Diagrams
+## Logic & Diagrams
 
 ### Game Loop Architecture
 The State Machine handles the "Instant Win" checks immediately after placement.
@@ -133,7 +133,7 @@ graph TD
 
 ---
 
-## 5. Controls
+## Controls
 
 | Key | Action |
 | :--- | :--- |
@@ -143,15 +143,6 @@ graph TD
 | **ESC** | Exit |
 
 ---
-
-## 6. Source Code Reference
-*Ensure `GreatKingdom/Program.cs` contains the following:*
-
-```csharp
-namespace GreatKingdom;
-// (Refer to the Program.cs file provided in the project for full implementation)
-// Key classes: GreatKingdomGame, Cell, GameState
-```
 
 ## Acknowledgements
 The primary source material for the rules and mechanics implemented in this project is the official tutorial video by KBG Publishing.
