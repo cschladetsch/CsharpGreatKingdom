@@ -8,6 +8,10 @@
 
 ---
 
+## Demo
+
+[Demo](Resources/Demo2.gif)
+
 ## Build & Run Instructions
 
 ### Prerequisites
