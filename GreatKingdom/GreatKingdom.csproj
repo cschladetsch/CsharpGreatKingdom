@@ -5,10 +5,13 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <TieredCompilation>true</TieredCompilation> 
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Raylib-cs" Version="6.0.0" />
+    <PackageReference Include="TorchSharp" Version="0.102.4" />
+    <PackageReference Include="TorchSharp-cpu" Version="0.102.4" />
   </ItemGroup>
 
 </Project>
