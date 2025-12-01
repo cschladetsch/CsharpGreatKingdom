@@ -6,12 +6,12 @@ namespace GreatKingdom;
 
 public class Renderer
 {
-    // --- Layout Constants (Must match Program.cs logic) ---
-    const int CellSize = 80;
+    // --- Layout (Dynamic - recalculated based on window size) ---
     const int GridSize = 9;
-    const int Padding = 40;
-    const int ScreenWidth = (GridSize * CellSize) + (Padding * 2);
-    const int ScreenHeight = ScreenWidth + 80;
+    int CellSize;
+    int Padding;
+    int ScreenWidth;
+    int ScreenHeight;
 
     // --- Colors ---
     static Color ColBlue = new Color(60, 120, 230, 255);
@@ -19,40 +19,64 @@ public class Renderer
     static Color ColNeutral = new Color(120, 120, 130, 255);
     static Color ColDarkBg = new Color(30, 30, 35, 255);
 
+    // Recalculates layout dimensions based on current window size
+    private void UpdateLayout()
+    {
+        ScreenWidth = Raylib.GetScreenWidth();
+        ScreenHeight = Raylib.GetScreenHeight();
+
+        // Calculate cell size to fit the grid with padding
+        int availableWidth = ScreenWidth - 80; // Leave room for padding
+        int availableHeight = ScreenHeight - 160; // Leave room for padding and UI elements
+
+        int maxCellWidth = availableWidth / GridSize;
+        int maxCellHeight = availableHeight / GridSize;
+
+        CellSize = Math.Min(maxCellWidth, maxCellHeight);
+        Padding = (ScreenWidth - (GridSize * CellSize)) / 2;
+    }
+
     // --- DRAWING METHODS ---
 
-    public void DrawMenu(bool isBrainReady, float time, int fps)
+    public void DrawMenu(bool isBrainReady, float time, int fps, int gamesPlayed)
     {
+        UpdateLayout();
         Raylib.BeginDrawing();
         Raylib.ClearBackground(ColDarkBg);
-        
+
         DrawCastle(ScreenWidth/2, 80, 50, ColBlue, false);
         Raylib.DrawText("GREAT KINGDOM", ScreenWidth/2 - 160, 140, 40, Color.RayWhite);
 
         DrawBtn(200, "Play Hotseat");
         DrawBtn(280, "Play vs MCTS (Hard)");
-        
+
         if (isBrainReady)
         {
             DrawBtn(360, "Play vs NeuralNet");
             DrawBtn(440, "Train Neural Net");
-            DrawBtn(600, "Load Specific Brain");
+            DrawBtn(520, "Train: Top 2 Brains Battle");
+            DrawBtn(680, "Load Specific Brain");
         }
         else
         {
             DrawBtnDisabled(360, $"Loading AI...");
             DrawBtnDisabled(440, "Please Wait");
-            DrawBtnDisabled(600, "Load Specific Brain");
+            DrawBtnDisabled(520, "Please Wait");
+            DrawBtnDisabled(680, "Load Specific Brain");
         }
 
-        DrawBtn(520, "Network Multiplayer");
-        
+        DrawBtn(600, "Network Multiplayer");
+
+        // Session stats (bottom left)
+        Raylib.DrawText($"Games: {gamesPlayed}", Padding, ScreenHeight - Padding / 2, 20, Color.RayWhite);
+
         DrawFPS(fps);
         Raylib.EndDrawing();
     }
 
     public void DrawLobby(string ip, string status, float time, int fps)
     {
+        UpdateLayout();
         Raylib.BeginDrawing();
         Raylib.ClearBackground(new Color(20, 40, 50, 255));
         
@@ -70,31 +94,82 @@ public class Renderer
         Raylib.EndDrawing();
     }
 
-    public void DrawTraining(int games, float loss, float time, string msg, float msgTimer, int fps)
+    public void DrawTraining(int games, float loss, float time, string msg, float msgTimer, int fps, GameState? trainingState, List<int> flashingPieces, bool shouldFlash)
     {
+        UpdateLayout();
         Raylib.BeginDrawing();
         Raylib.ClearBackground(ColDarkBg);
-        
-        Raylib.DrawText("NEURAL NETWORK GYM", 50, 50, 30, Color.White);
-        Raylib.DrawText($"Games: {games}", 50, 150, 30, ColBlue);
-        Raylib.DrawText($"Loss:  {loss:F5}", 50, 200, 30, ColOrange);
-        
-        // Pulse
-        float pulse = 10 + (float)Math.Sin(time * 15) * 5;
-        Raylib.DrawCircle(600, 200, 40 + pulse, Raylib.ColorAlpha(Color.Magenta, 0.4f));
+
+        // Draw the game board if available
+        if (trainingState != null)
+        {
+            DrawGameBoard(trainingState.Value, flashingPieces, shouldFlash);
+        }
+
+        // Draw semi-transparent overlay for stats
+        Raylib.DrawRectangle(0, 0, ScreenWidth, 100, Raylib.ColorAlpha(ColDarkBg, 0.8f));
+        Raylib.DrawRectangle(0, ScreenHeight - 260, ScreenWidth, 260, Raylib.ColorAlpha(ColDarkBg, 0.8f));
+
+        Raylib.DrawText("NEURAL NETWORK GYM", 50, 20, 24, Color.White);
+        Raylib.DrawText($"Games: {games}  Loss: {loss:F5}", 50, 55, 20, ColBlue);
+
+        // Pulse indicator (smaller)
+        float pulse = 5 + (float)Math.Sin(time * 15) * 3;
+        Raylib.DrawCircle(ScreenWidth - 50, 50, 15 + pulse, Raylib.ColorAlpha(Color.Magenta, 0.4f));
 
         DrawBtn(ScreenHeight - 80, "Stop Training");
-        DrawBtn(ScreenHeight - 160, "Save New Brain"); 
-        DrawBtn(ScreenHeight - 240, "Load Specific Brain"); 
-        
-        if (msgTimer > 0) Raylib.DrawText(msg, 400, ScreenHeight - 120, 20, Color.Green);
+        DrawBtn(ScreenHeight - 160, "Save New Brain");
+        DrawBtn(ScreenHeight - 240, "Load Specific Brain");
+
+        if (msgTimer > 0) Raylib.DrawText(msg, 50, ScreenHeight - 280, 18, Color.Green);
 
         DrawFPS(fps);
         Raylib.EndDrawing();
     }
     
+    public void DrawBrainVsBrain(int games, float loss1, float loss2, int wins1, int wins2, float time, string msg, float msgTimer, int fps, GameState? trainingState, List<int> flashingPieces, bool shouldFlash)
+    {
+        UpdateLayout();
+        Raylib.BeginDrawing();
+        Raylib.ClearBackground(ColDarkBg);
+
+        // Draw the game board if available
+        if (trainingState != null)
+        {
+            DrawGameBoard(trainingState.Value);
+        }
+
+        // Draw semi-transparent overlay for stats
+        Raylib.DrawRectangle(0, 0, ScreenWidth, 140, Raylib.ColorAlpha(ColDarkBg, 0.85f));
+        Raylib.DrawRectangle(0, ScreenHeight - 100, ScreenWidth, 100, Raylib.ColorAlpha(ColDarkBg, 0.85f));
+
+        Raylib.DrawText("BRAIN VS BRAIN", 50, 15, 22, Color.White);
+        Raylib.DrawText($"Games: {games}", 50, 45, 18, Color.White);
+
+        // Brain 1 stats (Blue) - compact
+        Raylib.DrawText("Brain 1:", 50, 75, 18, ColBlue);
+        Raylib.DrawText($"L:{loss1:F5} W:{wins1}", 50, 100, 16, ColBlue);
+
+        // Brain 2 stats (Orange) - compact
+        Raylib.DrawText("Brain 2:", 400, 75, 18, ColOrange);
+        Raylib.DrawText($"L:{loss2:F5} W:{wins2}", 400, 100, 16, ColOrange);
+
+        // Pulse indicators (smaller)
+        float pulse = 5 + (float)Math.Sin(time * 15) * 3;
+        Raylib.DrawCircle(150, 90, 12 + pulse, Raylib.ColorAlpha(ColBlue, 0.4f));
+        Raylib.DrawCircle(500, 90, 12 + pulse, Raylib.ColorAlpha(ColOrange, 0.4f));
+
+        DrawBtn(ScreenHeight - 80, "Stop Training");
+
+        if (msgTimer > 0) Raylib.DrawText(msg, 50, ScreenHeight - 120, 16, Color.Green);
+
+        DrawFPS(fps);
+        Raylib.EndDrawing();
+    }
+
     public void DrawBrainSelect(string[] availableBrains, int selectedIndex, int scrollOffset)
     {
+        UpdateLayout();
         Raylib.BeginDrawing();
         Raylib.ClearBackground(new Color(15, 25, 40, 255));
         
@@ -138,11 +213,12 @@ public class Renderer
     }
 
 
-    public void DrawGame(GameState state, bool isAiThinking, string status, float time, int fps)
+    public void DrawGame(GameState state, bool isAiThinking, string status, float time, int fps, List<int> flashingPieces, bool shouldFlash)
     {
+        UpdateLayout();
         Raylib.BeginDrawing();
         Raylib.ClearBackground(ColDarkBg);
-        
+
         // Grid
         Raylib.DrawRectangleLines(Padding, Padding, GridSize*CellSize, GridSize*CellSize, Color.Gray);
         for(int i=1; i<9; i++) {
@@ -153,9 +229,13 @@ public class Renderer
         // Castles
         for(int i=0; i<81; i++) {
             if(state.Board[i] == (byte)Player.None) continue;
+
+            // Skip drawing flashing pieces when they should be hidden (for flashing effect)
+            if (flashingPieces.Contains(i) && !shouldFlash) continue;
+
             int cx = Padding + (i%GridSize*CellSize) + CellSize/2;
             int cy = Padding + (i/GridSize*CellSize) + CellSize/2;
-            Color c = (state.Board[i] == (byte)Player.Blue) ? ColBlue : 
+            Color c = (state.Board[i] == (byte)Player.Blue) ? ColBlue :
                       (state.Board[i] == (byte)Player.Orange) ? ColOrange : ColNeutral;
             DrawCastle(cx, cy, 35, c, false);
         }
@@ -191,6 +271,48 @@ public class Renderer
     }
 
     // --- HELPERS ---
+
+    private void DrawGameBoard(GameState state, List<int>? flashingPieces = null, bool shouldFlash = false, byte flashingColor = 0)
+    {
+        // Grid
+        Raylib.DrawRectangleLines(Padding, Padding, GridSize*CellSize, GridSize*CellSize, Color.Gray);
+        for(int i=1; i<9; i++) {
+            Raylib.DrawLine(Padding+i*CellSize, Padding, Padding+i*CellSize, Padding+GridSize*CellSize, new Color(50,50,60,255));
+            Raylib.DrawLine(Padding, Padding+i*CellSize, Padding+GridSize*CellSize, Padding+i*CellSize, new Color(50,50,60,255));
+        }
+
+        // Draw normal pieces
+        for(int i=0; i<81; i++) {
+            if(state.Board[i] == (byte)Player.None) continue;
+
+            int cx = Padding + (i%GridSize*CellSize) + CellSize/2;
+            int cy = Padding + (i/GridSize*CellSize) + CellSize/2;
+            Color c = (state.Board[i] == (byte)Player.Blue) ? ColBlue :
+                      (state.Board[i] == (byte)Player.Orange) ? ColOrange : ColNeutral;
+
+            DrawCastle(cx, cy, 35, c, false);
+        }
+
+        // Draw flashing pieces ON TOP (they appear/disappear)
+        if (flashingPieces != null && flashingPieces.Count > 0 && shouldFlash)
+        {
+            Color flashColor = (flashingColor == (byte)Player.Blue) ? ColBlue :
+                              (flashingColor == (byte)Player.Orange) ? ColOrange : ColNeutral;
+
+            // Make it VERY bright so it's obviously flashing
+            flashColor = new Color(255, 255, 100, 255); // Bright yellow
+
+            foreach (int pos in flashingPieces)
+            {
+                int cx = Padding + (pos%GridSize*CellSize) + CellSize/2;
+                int cy = Padding + (pos/GridSize*CellSize) + CellSize/2;
+
+                // Draw with glow effect
+                Raylib.DrawCircle(cx, cy, 45, Raylib.ColorAlpha(flashColor, 0.5f));
+                DrawCastle(cx, cy, 35, flashColor, false);
+            }
+        }
+    }
 
     private void DrawCastle(int cx, int cy, int size, Color c, bool isGhost)
     {

@@ -1,7 +1,7 @@
 {
   "Game": {
     "GridSize": 9,
-    "MCTSIterations": 1000,
+    "MCTSIterations": 5000,
     "DefaultIP": "127.0.0.1",
     "Port": 7777
   },

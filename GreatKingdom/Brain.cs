@@ -140,15 +140,54 @@ public class Brain
     {
         string path = Path.Combine(BrainDirectory, filename);
         if (!File.Exists(path)) return false;
-        
+
         // This relies on GameController's AsyncLoadWorker to perform the actual load
         // by replacing the agent instance. For simplicity, we just return true here
         // as the loading logic usually lives inside the DQNAgent (neuralNet.LoadModel)
-        
+
         // We will assume the GameController handles the final loading based on the filename passed.
-        // If this were a real file, you would put the loading logic here, but since 
+        // If this were a real file, you would put the loading logic here, but since
         // DQNAgent handles it, we only pass the reference.
-        
-        return true; 
+
+        return true;
+    }
+
+    // --- GET TOP 2 BRAINS FOR COMPETITIVE TRAINING ---
+    public (string? brain1, string? brain2) GetTop2Brains()
+    {
+        var brainPaths = Directory.GetFiles(BrainDirectory, "brain_L*.bin")
+                                  .Where(f => !f.EndsWith(LatestFileAlias, StringComparison.OrdinalIgnoreCase))
+                                  .ToList();
+
+        if (brainPaths.Count < 2) return (null, null);
+
+        var brains = new List<(float Loss, string Path)>();
+
+        // Parse loss from filename - handle variable length loss strings
+        foreach (var path in brainPaths)
+        {
+            string filename = Path.GetFileName(path);
+            int lossStart = filename.IndexOf("L") + 1;
+            int underscoreAfterLoss = filename.IndexOf("_", lossStart);
+
+            if (lossStart > 0 && underscoreAfterLoss > lossStart)
+            {
+                string lossDigits = filename.Substring(lossStart, underscoreAfterLoss - lossStart);
+                if (float.TryParse(lossDigits, NumberStyles.Integer, CultureInfo.InvariantCulture, out float lossValue))
+                {
+                    // Normalize based on number of digits (e.g., "0058" with 4 digits = 0.0058)
+                    int numDigits = lossDigits.Length;
+                    float normalizedLoss = lossValue / (float)Math.Pow(10, numDigits);
+                    brains.Add((normalizedLoss, filename));
+                }
+            }
+        }
+
+        // Sort by loss (ascending - lowest is best)
+        var topBrains = brains.OrderBy(b => b.Loss).Take(2).ToList();
+
+        if (topBrains.Count < 2) return (null, null);
+
+        return (topBrains[0].Path, topBrains[1].Path);
     }
 }

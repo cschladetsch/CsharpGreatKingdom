@@ -8,7 +8,7 @@ using Raylib_cs;
 
 namespace GreatKingdom;
 
-public enum AppScreen { Loading, Menu, Game, NetLobby, Training, BrainSelect }
+public enum AppScreen { Loading, Menu, Game, NetLobby, Training, BrainSelect, BrainVsBrain }
 public enum GameMode { Hotseat, VsAI, VsNeuralNet, Network }
 
 class Program
@@ -46,8 +46,8 @@ class Program
         }
 
         // 2. Init Raylib
-        Raylib.SetConfigFlags(ConfigFlags.Msaa4xHint);
-        Raylib.InitWindow(ScreenWidth, ScreenHeight, "Great Kingdom: Neural Edition"); 
+        Raylib.SetConfigFlags(ConfigFlags.Msaa4xHint | ConfigFlags.ResizableWindow);
+        Raylib.InitWindow(ScreenWidth, ScreenHeight, "Great Kingdom: Neural Edition");
         Raylib.SetTargetFPS(60);
 
         // 3. Init Lightweight Engines
