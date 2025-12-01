@@ -58,7 +58,7 @@ dotnet run --project GreatKingdom
 
 Great Kingdom combines the territory mechanics of *Go* with a "Sudden Death" rule.
 
-See also [Rules.md](Rules).
+See also (Rules.md)[Rules].
 
 ### Core Mechanics
 1.  **Objective:** Win via **Capture** (Sudden Death) or **Territory Scoring**.
