@@ -4,7 +4,7 @@
 
 ---
 
-## 1. Game Overview
+## Game Overview
 
 * **Players:** 2 (Blue vs. Orange).
 * **Board:** 9x9 Grid (typically).
@@ -12,7 +12,7 @@
 
 ---
 
-## 2. Components & Setup
+## Components & Setup
 
 1.  **The Neutral Castle:** Place the grey Neutral Castle on the center intersection of the board (*Tengen*). This piece acts as a permanent, indestructible wall for both players.
 2.  **Player Pieces:**
@@ -22,7 +22,7 @@
 
 ---
 
-## 3. Gameplay Loop
+## Gameplay Loop
 
 Players alternate turns placing one castle at a time. The game continues until a capture occurs or both players pass.
 
@@ -55,19 +55,19 @@ graph TD
 
 ---
 
-## 4. Territory Rules
+## Territory Rules
 
 Territory is defined as empty intersections surrounded by a player's castles.
 
-### 4.1. Definition of Enclosure
+### Definition of Enclosure
 * **Orthogonal Only:** Connections must be Up, Down, Left, or Right. Diagonals do not count.
 * **Walls:** You may use the **Board Edges** and the **Neutral Castle** as walls to complete an enclosure.
 
-### 4.2. Invalid Territory
+### Invalid Territory
 * **Invasion:** If an opponent's castle is inside the area, it is **not** territory.
 * **The 4-Edge Rule:** A territory cannot touch all four edges of the board simultaneously.
 
-### 4.3. Territory Logic Flow
+### Territory Logic Flow
 
 ```mermaid
 graph TD
@@ -90,7 +90,7 @@ graph TD
 
 ---
 
-## 5. Sudden Death (The Capture Rule)
+## Sudden Death (The Capture Rule)
 
 Unlike traditional Go, **capturing a piece ends the game immediately.**
 
@@ -129,7 +129,7 @@ stateDiagram-v2
 
 ---
 
-## 6. Scoring (The Handicap)
+## Scoring (The Handicap)
 
 If no captures occur, the game ends when both players pass.
 
@@ -146,7 +146,7 @@ graph LR
     Count[Count Territories] --> B[Blue Score]
     Count --> O[Orange Score]
     
-    B & O --> Compare{Calculate Difference<br/>(Blue - Orange)}
+    B & O --> Compare{"Calculate Difference<br/>(Blue - Orange)"}
     
     Compare -- Difference is 3 or more --> BlueWin[BLUE WINS]
     Compare -- Difference is 0, 1, or 2 --> OrangeWin[ORANGE WINS]
