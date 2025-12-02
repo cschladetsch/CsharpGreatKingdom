@@ -237,7 +237,7 @@ public class GameController
             moves++;
 
             // Small delay to make visualization visible
-            System.Threading.Thread.Sleep(100);
+            //System.Threading.Thread.Sleep(100);
         }
 
         // Assign final rewards after game ends
@@ -964,7 +964,7 @@ public class GameController
             moves++;
 
             // Small delay to make visualization visible
-            System.Threading.Thread.Sleep(100);
+            //System.Threading.Thread.Sleep(100);
         }
 
         // Track wins
