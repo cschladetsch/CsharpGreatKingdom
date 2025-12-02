@@ -130,14 +130,35 @@ public class GameController
     // ------------------------------------------
     // ASYNC WORKERS (These methods are defined inside the class)
     // ------------------------------------------
-    private void AsyncLoadWorker()
+    private async void AsyncLoadWorker()
     {
         try
         {
-            LoadStatus = "Loading saved brain...";
-            _brainManager.LoadBrain(Brain.LatestFileAlias);
+            LoadStatus = "Loading latest brain...";
+            await Task.Delay(500); // Give UI time to show message
+
+            string latestPath = Path.Combine("brains", Brain.LatestFileAlias);
+            string defaultPath = Path.Combine("brains", "brain_default.bin");
+
+            if (File.Exists(latestPath))
+            {
+                _neuralNet.LoadModel(latestPath);
+                LoadStatus = "Latest brain loaded!";
+            }
+            else if (File.Exists(defaultPath))
+            {
+                LoadStatus = "No latest brain, loading default...";
+                await Task.Delay(500);
+                _neuralNet.LoadModel(defaultPath);
+                LoadStatus = "Default brain loaded!";
+            }
+            else
+            {
+                LoadStatus = "No brains found! Using random weights.";
+                await Task.Delay(1000);
+            }
+            
             _isBrainReady = true;
-            LoadStatus = "Ready!";
         }
         catch (Exception ex)
         {

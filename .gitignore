@@ -1,6 +1,11 @@
+# Ignore build artifacts
 *.log
 obj/
 bin/
-brain_models/
-brains/
 
+# Ignore all dynamically generated brain files...
+GreatKingdom/brains/brain_L*.bin
+
+# ...but KEEP the default brain and the latest alias.
+!GreatKingdom/brains/brain_default.bin
+!GreatKingdom/brains/latest.bin

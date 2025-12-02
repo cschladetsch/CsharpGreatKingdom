@@ -77,35 +77,35 @@ If both players **Pass** consecutively, the game ends. Players count the empty i
 
 ---
 
-## Neural Network AI System
+## AI & Training
 
-Great Kingdom includes a Deep Q-Network (DQN) AI implementation using **TorchSharp**, capable of learning to play through self-training against the MCTS opponent.
+Great Kingdom includes a Deep Q-Network (DQN) AI that learns to play through self-training. The system is designed to work out-of-the-box with a default brain, while also providing powerful tools for users who wish to train stronger models.
 
-### Architecture
+### How to Use and Train the AI
 
-The neural network is a fully-connected feedforward network:
+The repository uses a simple and robust strategy for managing AI models ("brains") within the `GreatKingdom/brains/` directory:
 
-```
-Input Layer:  81 nodes (9x9 board state)
-Hidden Layer: 256 nodes (ReLU activation)
-Hidden Layer: 256 nodes (ReLU activation)
-Output Layer: 81 nodes (Q-values for each board position)
-```
+1.  **Out-of-the-Box Play**: The game comes with `brain_default.bin`, a single, untrained model. On first launch or when no other brains are present, the game loads this brain, allowing you to immediately play against a functional AI by selecting **"VS Neural Net"**.
 
-**Input Encoding:**
-* `1.0` = Your stones
-* `-1.0` = Opponent stones
-* `0.1` = Neutral castle
-* `0.0` = Empty space
+2.  **Initial Training (vs. MCTS)**: To create stronger brains, go to the main menu and select **"Train Neural Net"**. In this mode, the AI plays against a traditional MCTS opponent. As it improves, it saves new brains with filenames like `brain_L005843_G12345_....bin`.
 
-**Training Algorithm:**
-* **Deep Q-Learning (DQN)** with experience replay and target network
-* **Opponent**: MCTS (Monte Carlo Tree Search) with configurable iterations
-* **Reward Shaping**: Captures (+0.3/stone), losses (-0.5/stone), win (+1.0), loss (-1.0)
+3.  **Advanced Training (Brain vs. Brain)**: Once you have generated at least two brains, select **"Brain vs. Brain"** from the main menu. The system automatically loads the two best-performing brains and has them play against each other in a continuous self-training loop. This self-competition rapidly accelerates the AI's skill.
 
-### Brain Storage
+4.  **Using Your Trained AI**: When you stop the "Brain vs. Brain" session (by pressing `ESC`), the champion brain is automatically saved as `latest.bin`. The game will now automatically load this superior brain whenever you select **"VS Neural Net"** from the main menu.
 
-Trained neural networks ("brains") are stored in the `brains/` directory at the project root.
+#### How to Create Your First Models for Self-Training
+
+The powerful "Brain vs. Brain" training mode requires at least two different brain files to compare. Here is how to create them:
+
+1.  **Start the Initial Training:** From the main menu, select **"Train Neural Net"**. You will see a live view of the AI playing against the MCTS opponent.
+2.  **Save the First Brain:** Wait for the "Games Played" counter to reach a milestone (e.g., 50 or 100 games). Press the **"Save Brain"** button. A new `brain_L..._G....bin` file is now saved.
+3.  **Let the AI Improve:** Allow the training to continue for another 50-100 games. The AI's "Current Loss" should decrease, showing that it is learning.
+4.  **Save the Second Brain:** Press the **"Save Brain"** button again. You now have a second, slightly stronger brain file.
+5.  **Begin Self-Training:** You can now exit (press `ESC`) and start the **"Brain vs. Brain"** mode. The system will automatically pick your two newly saved brains and begin the advanced self-training process.
+
+### Brain Storage & Filename Format
+
+Trained neural networks are stored in the `GreatKingdom/brains/` directory.
 
 **Filename Format:**
 ```
@@ -123,68 +123,34 @@ brain_L005843_G12345_20251202_143000.bin
 ```
 
 **Special Files:**
-* `latest.bin` - Alias pointing to the most recently saved brain
+* `brain_default.bin` - The default, untrained brain included in the repo (tracked by Git LFS).
+* `latest.bin` - An alias for the best brain from a training session. This file is ignored by Git, as it is a dynamically generated copy of the current best model.
 
-**Automatic Management:**
-* System keeps the 5 best brains (lowest loss)
-* Older/worse brains are automatically deleted
-* Auto-save triggers when loss drops below `0.005`
+### AI Architecture & Algorithm
 
-### Training the Neural Net
+*   **Model**: The neural network is a fully-connected feedforward network built with TorchSharp.
+    ```
+    Input Layer:  81 nodes (9x9 board state)
+    Hidden Layer: 256 nodes (ReLU activation)
+    Hidden Layer: 256 nodes (ReLU activation)
+    Output Layer: 81 nodes (Q-values for each board position)
+    ```
+*   **Input Encoding**: The 9x9 board is flattened into a vector with the following values:
+    *   `1.0` = Your stones
+    *   `-1.0` = Opponent stones
+    *   `0.1` = Neutral castle
+    *   `0.0` = Empty space
+*   **Training Algorithm**: The AI uses **Deep Q-Learning (DQN)** with experience replay and a target network to stabilize learning.
+    *   **Opponent**: During initial "Train Neural Net" mode, the AI plays against a **Monte Carlo Tree Search (MCTS)** algorithm with configurable iterations.
+*   **Reward Shaping**: To guide learning, the AI receives small rewards or penalties during the game, in addition to the final win/loss signal.
+    *   **Shaped Rewards**: Captures (+0.3/stone), losses (-0.5/stone)
+    *   **Terminal Rewards**: Win (+1.0), Loss (-1.0)
 
-1. **Launch Training Mode:** From the main menu, select "Train Neural Net"
-2. **Training Loop:** The AI plays against MCTS continuously, learning from each game
-3. **Monitor Progress:**
-   * **Games Played**: Number of training episodes completed
-   * **Current Loss**: Lower is better (target: < 0.005)
-4. **Save Options:**
-   * **Auto-Save**: Automatically saves when loss < 0.005
-   * **Manual Save**: Press the "Save Brain" button
-   * **Load Brain**: Select from previously saved brains
+### Configuration & Hyperparameters (`config.json`)
 
-### Configuration
+The game uses `config.json` for runtime configuration. This file is located at the project root (`CsharpGreatKingdom/config.json`) and is automatically loaded on startup.
 
-AI hyperparameters are defined in `ConfigData.cs`:
-
-```csharp
-// Learning
-LearningRate: 0.000005    // How fast the network learns
-Gamma: 0.85               // Discount factor for future rewards
-BatchSize: 128            // Training batch size
-
-// Exploration
-EpsilonStart: 1.0         // Initial exploration rate (100%)
-EpsilonMin: 0.05          // Minimum exploration rate (5%)
-EpsilonDecay: 0.9995      // Exploration decay per game
-
-// Memory
-Capacity: 5000            // Experience replay buffer size
-TargetUpdateFrequency: 500 // Update target network every N training steps
-```
-
-### Playing Against the Neural Net
-
-1. From the main menu, select "VS Neural Net"
-2. You play as **Blue**, the AI plays as **Orange**
-3. The AI uses the most recently saved brain (`latest.bin`)
-4. Training mode is disabled during gameplay for optimal performance
-
----
-
-## Configuration File
-
-The game uses `config.json` for runtime configuration. This file is located at the project root and is automatically loaded on startup.
-
-### Location
-```
-CsharpGreatKingdom/
-  config.json          # Main configuration file
-  GreatKingdom/
-    config.json        # Copy for development
-```
-
-### Full Configuration Structure
-
+**Configuration Structure:**
 ```json
 {
   "Game": {
@@ -212,7 +178,7 @@ CsharpGreatKingdom/
 }
 ```
 
-### Settings Explained
+#### Settings Explained
 
 **Game Settings:**
 | Parameter | Default | Description |
@@ -242,7 +208,7 @@ CsharpGreatKingdom/
 | `Capacity` | 10000 | Experience replay buffer size (more = better diversity, more RAM) |
 | `TargetUpdateFrequency` | 500 | Update target network every N training steps (stabilizes learning) |
 
-### Tuning Tips
+#### Tuning Tips
 
 **For Faster Training:**
 * Increase `LearningRate` to 0.001-0.005
@@ -258,6 +224,7 @@ CsharpGreatKingdom/
 * Decrease `LearningRate`
 * Increase `Gamma` (0.95-0.99)
 * Decrease `EpsilonDecay` (slower exploration reduction)
+
 
 ---
 
