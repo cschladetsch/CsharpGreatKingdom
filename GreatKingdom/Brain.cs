@@ -18,7 +18,6 @@ public class Brain
         Directory.CreateDirectory(BrainDirectory);
     }
     
-    // --- FILENAME GENERATION ---
     private string GenerateFilename(float loss, int gamesPlayed)
     {
         // Format loss to 6 digits for 3 decimal places precision
@@ -31,7 +30,6 @@ public class Brain
         return $"brain_L{lossStr}_G{gamesPlayed}_{timestamp}.bin";
     }
     
-    // --- MAIN SAVE METHOD (Synchronized) ---
     // Takes the DQNAgent instance to read its current state (loss, games) and save the model.
     public void SaveCurrentBrain(DQNAgent agent)
     {
@@ -53,7 +51,6 @@ public class Brain
         CleanupBrains();
     }
     
-    // --- CLEANUP LOGIC ---
     private void CleanupBrains()
     {
         var brainFiles = Directory.GetFiles(BrainDirectory, "brain_L*.bin")
@@ -96,16 +93,15 @@ public class Brain
         }
     }
 
-    // --- LISTING LOGIC ---
     public string[] ListAvailableBrains()
     {
-        // 1. Get all saved brain files (excluding the 'latest.bin' alias)
+        // Get all saved brain files (excluding the 'latest.bin' alias)
         var brainPaths = Directory.GetFiles(BrainDirectory, "brain_L*.bin")
                                   .Where(f => !f.EndsWith(LatestFileAlias, StringComparison.OrdinalIgnoreCase));
         
         var brains = new List<(float Loss, string DisplayName, string Path)>();
 
-        // 2. Parse details for display and sorting
+        // Parse details for display and sorting
         foreach (var path in brainPaths)
         {
             string filename = Path.GetFileName(path);
@@ -129,13 +125,12 @@ public class Brain
             brains.Add((loss, displayName, filename));
         }
 
-        // 3. Sort by Loss (lowest first)
+        // Sort by Loss (lowest first)
         return brains.OrderBy(b => b.Loss)
                      .Select(b => b.Path) // Return the actual filename for loading
                      .ToArray();
     }
 
-    // --- LOADING LOGIC ---
     public bool LoadBrain(string filename)
     {
         string path = Path.Combine(BrainDirectory, filename);
@@ -152,7 +147,6 @@ public class Brain
         return true;
     }
 
-    // --- GET TOP 2 BRAINS FOR COMPETITIVE TRAINING ---
     public (string? brain1, string? brain2) GetTop2Brains()
     {
         var brainPaths = Directory.GetFiles(BrainDirectory, "brain_L*.bin")

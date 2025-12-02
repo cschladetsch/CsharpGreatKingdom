@@ -34,7 +34,6 @@ public class DQNAgent
     private optim.Optimizer _optimizer; 
     private Random _rng = new Random();
     
-    // Parameters
     private ConfigData _config;
     private float _epsilon; 
     private float _gamma; 
@@ -51,12 +50,10 @@ public class DQNAgent
     public float CurrentLoss => _avgLoss; 
     public int GamesPlayed { get; private set; } = 0;
 
-    // FIX: CONSTRUCTOR MUST ACCEPT CONFIGDATA
     public DQNAgent(ConfigData config)
     {
         _config = config; 
 
-        // Apply config values
         _capacity = config.AI.Memory.Capacity;
         _epsilon = config.AI.Exploration.EpsilonStart;
         _epsilonMin = config.AI.Exploration.EpsilonMin;

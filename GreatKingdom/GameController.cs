@@ -11,7 +11,6 @@ namespace GreatKingdom;
 
 public class GameController
 {
-    // --- Config & Layout Constants ---
     private readonly ConfigData _config;
     private const int CellSize = 80;
     private const int GridSize = 9;
@@ -20,7 +19,6 @@ public class GameController
     private const int ScreenHeight = ScreenWidth + 80;
     private const int DisplayLimit = 12;
 
-    // --- Button Layout Constants ---
     private const int ButtonWidth = 300;
     private const int ButtonHeight = 60;
 
@@ -45,10 +43,10 @@ public class GameController
     // --- Engines & Managers ---
     private readonly Renderer _renderer;
     private readonly MCTS _mcts;
-    private DQNAgent _neuralNet; // Not readonly (set in async task)
+    private DQNAgent _neuralNet;
     private DQNAgent? _neuralNet2; // Second brain for brain-vs-brain training
-    private NetworkManager _net; // Not readonly
-    private Brain _brainManager; // Not readonly
+    private NetworkManager _net;
+    private Brain _brainManager;
 
     // --- Core State ---
     public AppScreen CurrentScreen { get; private set; } = AppScreen.Loading;
@@ -127,9 +125,6 @@ public class GameController
         Task.Run(AsyncLoadWorker);
     }
     
-    // ------------------------------------------
-    // ASYNC WORKERS (These methods are defined inside the class)
-    // ------------------------------------------
     private async void AsyncLoadWorker()
     {
         try
@@ -301,7 +296,6 @@ public class GameController
         return reward;
     }
     
-    // --- MAIN UPDATE LOOP (Called every frame from Program.cs) ---
     public void Update(float dt)
     {
         _time += dt;
@@ -337,7 +331,6 @@ public class GameController
         }
     }
     
-    // --- DRAW CALL (Called every frame from Program.cs) ---
     public void Draw(int fps)
     {
         // Get current training state and flashing pieces safely
@@ -363,7 +356,6 @@ public class GameController
         }
     }
 
-    // --- DRAWING UTILITY (Internal to Controller) ---
     private void DrawLoading()
     {
         Raylib.ClearBackground(new Color(30, 30, 35, 255));
@@ -373,7 +365,6 @@ public class GameController
         Raylib.DrawText(LoadStatus, cx - 100, cy + 60, 20, Color.Gray);
     }
     
-    // --- HELPER METHODS ---
     private bool BtnClick(float y) {
         float w = ButtonWidth, h = ButtonHeight;
         float screenWidth = Raylib.GetScreenWidth();
@@ -395,7 +386,7 @@ public class GameController
         return false;
     }
 
-    // Helper to find pieces with no liberties (captured pieces)
+    // Find pieces with no liberties (captured pieces)
     private List<int> FindCapturedPieces(GameState state, byte targetColor)
     {
         var capturedPieces = new List<int>();
@@ -418,7 +409,7 @@ public class GameController
         return capturedPieces;
     }
 
-    // Helper to check if a group has liberties and collect all pieces in the group
+    // Check if a group has liberties and collect all pieces in the group
     private bool CheckGroupLiberties(GameState state, int startIdx, byte color, bool[] globalVisited, List<int> group)
     {
         var stack = new Stack<int>();
@@ -455,21 +446,23 @@ public class GameController
         return foundLiberty;
     }
 
-    // ==========================================
-    //           UPDATE METHODS (Logic)
-    // ==========================================
-
     public void UpdateMenu()
     {
-        if(BtnClick(MenuButtonHotseat)) StartGame(GameMode.Hotseat);
-        if(BtnClick(MenuButtonMCTS)) StartGame(GameMode.VsAI);
+        if (BtnClick(MenuButtonHotseat)) 
+		StartGame(GameMode.Hotseat);
+
+        if (BtnClick(MenuButtonMCTS)) 
+		StartGame(GameMode.VsAI);
 
         if (_isBrainReady)
         {
-            if(BtnClick(MenuButtonNeuralNet)) StartGame(GameMode.VsNeuralNet);
-            if(BtnClick(MenuButtonTrain)) CurrentScreen = AppScreen.Training;
-            if(BtnClick(MenuButtonBrainBattle)) StartBrainVsBrainTraining();
-            if(BtnClick(MenuButtonLoadBrain)) {
+            if (BtnClick(MenuButtonNeuralNet)) 
+		StartGame(GameMode.VsNeuralNet);
+            if (BtnClick(MenuButtonTrain)) 
+		CurrentScreen = AppScreen.Training;
+            if (BtnClick(MenuButtonBrainBattle)) 
+		StartBrainVsBrainTraining();
+            if (BtnClick(MenuButtonLoadBrain)) {
                 AvailableBrains = _brainManager.ListAvailableBrains();
                 SelectedBrainIndex = 0;
                 ScrollOffset = 0;
@@ -477,7 +470,8 @@ public class GameController
             }
         }
 
-        if(BtnClick(MenuButtonNetwork)) CurrentScreen = AppScreen.NetLobby;
+        if (BtnClick(MenuButtonNetwork)) 
+		CurrentScreen = AppScreen.NetLobby;
     }
 
     public void UpdateLobby()
@@ -518,16 +512,15 @@ public class GameController
         if (AvailableBrains.Length > 0)
         {
             if (Raylib.IsKeyPressed(KeyboardKey.Down) || Raylib.IsKeyPressed(KeyboardKey.S))
-            {
                 SelectedBrainIndex = Math.Min(SelectedBrainIndex + 1, AvailableBrains.Length - 1);
-            }
+            
             if (Raylib.IsKeyPressed(KeyboardKey.Up) || Raylib.IsKeyPressed(KeyboardKey.W))
-            {
                 SelectedBrainIndex = Math.Max(SelectedBrainIndex - 1, 0);
-            }
 
-            if (SelectedBrainIndex < ScrollOffset) ScrollOffset = SelectedBrainIndex;
-            if (SelectedBrainIndex >= ScrollOffset + DisplayLimit) ScrollOffset = SelectedBrainIndex - DisplayLimit + 1;
+            if (SelectedBrainIndex < ScrollOffset) 
+		ScrollOffset = SelectedBrainIndex;
+            if (SelectedBrainIndex >= ScrollOffset + DisplayLimit) 
+		ScrollOffset = SelectedBrainIndex - DisplayLimit + 1;
         }
 
 
