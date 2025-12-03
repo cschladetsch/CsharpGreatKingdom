@@ -7,9 +7,9 @@
   },
   "AI": {
     "Hyperparameters": {
-      "LearningRate": 0.0005,
-      "Gamma": 0.95,
-      "BatchSize": 128
+      "LearningRate": 0.00001,
+      "Gamma": 0.999,
+      "BatchSize": 64
     },
     "Exploration": {
       "EpsilonStart": 1.0,
@@ -17,7 +17,7 @@
       "EpsilonDecay": 0.9995
     },
     "Memory": {
-      "Capacity": 10000,
+      "Capacity": 90000,
       "TargetUpdateFrequency": 500
     }
   }

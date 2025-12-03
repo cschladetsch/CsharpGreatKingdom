@@ -1,4 +1,5 @@
 #!/bin/sh
 
-dotnet build --project GreatKingdom
+dotnet build GreatKingdom && GreatKingdom/bin/Release/net8.0/GreatKingdom
+
 
