@@ -1,5 +1,8 @@
 # Great Kingdom (C# / Raylib)
 
+📖 [Docs & diagrams](https://cschladetsch.github.io/CsharpGreatKingdom/)
+
+
 **Great Kingdom** is a strategic territory-building game where a single captured stone results in immediate defeat ("Sudden Death"). This project is a C# implementation using **Raylib** for hardware-accelerated 2D graphics, specifically configured for Windows and WSL2 (Linux) environments.
 
 ![Status](https://img.shields.io/badge/Status-Playable-brightgreen)

@@ -1,0 +1,4 @@
+title: Great Kingdom
+description: A C# implementation of Great Kingdom - a strategic territory-building game where a single captured stone results in immediate defeat - using Raylib for hardware-accelerated 2D graphics.
+theme: null
+markdown: kramdown
